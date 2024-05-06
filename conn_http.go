@@ -120,12 +120,14 @@ func (rw *HTTPReaderWriter) reset(pw *io.PipeWriter) io.WriteCloser {
 }
 
 func dialHttp(ctx context.Context, addr string, num int, opt *Options) (*httpConnect, error) {
-	var debugf = func(format string, v ...any) {}
+	var debugf = func(ctx context.Context, format string, v ...any) {}
 	if opt.Debug {
 		if opt.Debugf != nil {
 			debugf = opt.Debugf
 		} else {
-			debugf = log.New(os.Stdout, fmt.Sprintf("[clickhouse][conn=%d][%s]", num, addr), 0).Printf
+			debugf = func(ctx context.Context, format string, v ...any) {
+				log.New(os.Stdout, fmt.Sprintf("[clickhouse][conn=%d][%s]", num, addr), 0).Printf(format, v)
+			}
 		}
 	}
 
@@ -232,7 +234,7 @@ func dialHttp(ctx context.Context, addr string, num int, opt *Options) (*httpCon
 			return nil, err
 		}
 		if !resources.ClientMeta.IsSupportedClickHouseVersion(version) {
-			debugf("WARNING: version %v of ClickHouse is not supported by this client\n", version)
+			debugf(ctx, "WARNING: version %v of ClickHouse is not supported by this client\n", version)
 		}
 	}
 

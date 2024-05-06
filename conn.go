@@ -40,7 +40,7 @@ func dial(ctx context.Context, addr string, num int, opt *Options) (*connect, er
 	var (
 		err    error
 		conn   net.Conn
-		debugf = func(format string, v ...any) {}
+		debugf = func(ctx context.Context, format string, v ...any) {}
 	)
 	switch {
 	case opt.DialContext != nil:
@@ -60,7 +60,9 @@ func dial(ctx context.Context, addr string, num int, opt *Options) (*connect, er
 		if opt.Debugf != nil {
 			debugf = opt.Debugf
 		} else {
-			debugf = log.New(os.Stdout, fmt.Sprintf("[clickhouse][conn=%d][%s]", num, conn.RemoteAddr()), 0).Printf
+			debugf = func(ctx context.Context, format string, v ...any) {
+				log.New(os.Stdout, fmt.Sprintf("[clickhouse][conn=%d][%s]", num, conn.RemoteAddr()), 0).Printf(format, v)
+			}
 		}
 	}
 	compression := CompressionNone
@@ -102,7 +104,7 @@ func dial(ctx context.Context, addr string, num int, opt *Options) (*connect, er
 
 	// warn only on the first connection in the pool
 	if num == 1 && !resources.ClientMeta.IsSupportedClickHouseVersion(connect.server.Version) {
-		debugf("[handshake] WARNING: version %v of ClickHouse is not supported by this client - client supports %v", connect.server.Version, resources.ClientMeta.SupportedVersions())
+		debugf(ctx, "[handshake] WARNING: version %v of ClickHouse is not supported by this client - client supports %v", connect.server.Version, resources.ClientMeta.SupportedVersions())
 	}
 	return connect, nil
 }
@@ -112,7 +114,7 @@ type connect struct {
 	id                   int
 	opt                  *Options
 	conn                 net.Conn
-	debugf               func(format string, v ...any)
+	debugf               func(ctx context.Context, format string, v ...any)
 	server               ServerVersion
 	closed               bool
 	buffer               *chproto.Buffer
@@ -188,7 +190,7 @@ func (c *connect) progress() (*Progress, error) {
 	if err := progress.Decode(c.reader, c.revision); err != nil {
 		return nil, err
 	}
-	c.debugf("[progress] %s", &progress)
+	c.debugf(context.Background(), "[progress] %s", &progress)
 	return &progress, nil
 }
 
@@ -197,7 +199,7 @@ func (c *connect) exception() error {
 	if err := e.Decode(c.reader); err != nil {
 		return err
 	}
-	c.debugf("[exception] %s", e.Error())
+	c.debugf(context.Background(), "[exception] %s", e.Error())
 	return &e
 }
 
@@ -213,7 +215,7 @@ func (c *connect) compressBuffer(start int) error {
 }
 
 func (c *connect) sendData(block *proto.Block, name string) error {
-	c.debugf("[send data] compression=%q", c.compression)
+	c.debugf(context.Background(), "[send data] compression=%q", c.compression)
 	c.buffer.PutByte(proto.ClientData)
 	c.buffer.PutString(name)
 
@@ -230,7 +232,7 @@ func (c *connect) sendData(block *proto.Block, name string) error {
 			if err := c.compressBuffer(compressionOffset); err != nil {
 				return err
 			}
-			c.debugf("[buff compress] buffer size: %d", len(c.buffer.Buf))
+			c.debugf(context.Background(), "[buff compress] buffer size: %d", len(c.buffer.Buf))
 			if err := c.flush(); err != nil {
 				return err
 			}
@@ -243,13 +245,13 @@ func (c *connect) sendData(block *proto.Block, name string) error {
 	if err := c.flush(); err != nil {
 		switch {
 		case errors.Is(err, syscall.EPIPE):
-			c.debugf("[send data] pipe is broken, closing connection")
+			c.debugf(context.Background(), "[send data] pipe is broken, closing connection")
 			c.closed = true
 		case errors.Is(err, io.EOF):
-			c.debugf("[send data] unexpected EOF, closing connection")
+			c.debugf(context.Background(), "[send data] unexpected EOF, closing connection")
 			c.closed = true
 		default:
-			c.debugf("[send data] unexpected error: %v", err)
+			c.debugf(context.Background(), "[send data] unexpected error: %v", err)
 		}
 		return err
 	}
@@ -261,7 +263,7 @@ func (c *connect) sendData(block *proto.Block, name string) error {
 
 func (c *connect) readData(ctx context.Context, packet byte, compressible bool) (*proto.Block, error) {
 	if _, err := c.reader.Str(); err != nil {
-		c.debugf("[read data] str error: %v", err)
+		c.debugf(ctx, "[read data] str error: %v", err)
 		return nil, err
 	}
 	if compressible && c.compression != CompressionNone {
@@ -277,11 +279,11 @@ func (c *connect) readData(ctx context.Context, packet byte, compressible bool) 
 
 	block := proto.Block{Timezone: location}
 	if err := block.Decode(c.reader, c.revision); err != nil {
-		c.debugf("[read data] decode error: %v", err)
+		c.debugf(ctx, "[read data] decode error: %v", err)
 		return nil, err
 	}
 	block.Packet = packet
-	c.debugf("[read data] compression=%q. block: columns=%d, rows=%d", c.compression, len(block.Columns), block.Rows())
+	c.debugf(ctx, "[read data] compression=%q. block: columns=%d, rows=%d", c.compression, len(block.Columns), block.Rows())
 	return &block, nil
 }
 

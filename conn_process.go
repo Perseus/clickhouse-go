@@ -20,8 +20,9 @@ package clickhouse
 import (
 	"context"
 	"fmt"
-	"github.com/ClickHouse/clickhouse-go/v2/lib/proto"
 	"io"
+
+	"github.com/ClickHouse/clickhouse-go/v2/lib/proto"
 )
 
 type onProcess struct {
@@ -48,7 +49,7 @@ func (c *connect) firstBlock(ctx context.Context, on *onProcess) (*proto.Block, 
 		case proto.ServerData:
 			return c.readData(ctx, packet, true)
 		case proto.ServerEndOfStream:
-			c.debugf("[end of stream]")
+			c.debugf(ctx, "[end of stream]")
 			return nil, io.EOF
 		default:
 			if err := c.handle(ctx, packet, on); err != nil {
@@ -72,7 +73,7 @@ func (c *connect) process(ctx context.Context, on *onProcess) error {
 		}
 		switch packet {
 		case proto.ServerEndOfStream:
-			c.debugf("[end of stream]")
+			c.debugf(ctx, "[end of stream]")
 			return nil
 		}
 		if err := c.handle(ctx, packet, on); err != nil {
@@ -98,14 +99,14 @@ func (c *connect) handle(ctx context.Context, packet byte, on *onProcess) error 
 		if err := info.Decode(c.reader, c.revision); err != nil {
 			return err
 		}
-		c.debugf("[profile info] %s", &info)
+		c.debugf(ctx, "[profile info] %s", &info)
 		on.profileInfo(&info)
 	case proto.ServerTableColumns:
 		var info proto.TableColumns
 		if err := info.Decode(c.reader, c.revision); err != nil {
 			return err
 		}
-		c.debugf("[table columns]")
+		c.debugf(ctx, "[table columns]")
 	case proto.ServerProfileEvents:
 		events, err := c.profileEvents(ctx)
 		if err != nil {
@@ -123,7 +124,7 @@ func (c *connect) handle(ctx context.Context, packet byte, on *onProcess) error 
 		if err != nil {
 			return err
 		}
-		c.debugf("[progress] %s", progress)
+		c.debugf(ctx, "[progress] %s", progress)
 		on.progress(progress)
 	default:
 		return &OpError{
@@ -135,7 +136,7 @@ func (c *connect) handle(ctx context.Context, packet byte, on *onProcess) error 
 }
 
 func (c *connect) cancel() error {
-	c.debugf("[cancel]")
+	c.debugf(context.Background(), "[cancel]")
 	c.buffer.PutUVarInt(proto.ClientCancel)
 	wErr := c.flush()
 	// don't reuse a cancelled query as we don't drain the connection

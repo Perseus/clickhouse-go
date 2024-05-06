@@ -33,7 +33,7 @@ func (c *connect) query(ctx context.Context, release func(*connect, error), quer
 	)
 
 	if err != nil {
-		c.debugf("[bindQuery] error: %v", err)
+		c.debugf(ctx, "[bindQuery] error: %v", err)
 		release(c, err)
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (c *connect) query(ctx context.Context, release func(*connect, error), quer
 	init, err := c.firstBlock(ctx, onProcess)
 
 	if err != nil {
-		c.debugf("[query] first block error: %v", err)
+		c.debugf(ctx, "[query] first block error: %v", err)
 		release(c, err)
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (c *connect) query(ctx context.Context, release func(*connect, error), quer
 		}
 		err := c.process(ctx, onProcess)
 		if err != nil {
-			c.debugf("[query] process error: %v", err)
+			c.debugf(ctx, "[query] process error: %v", err)
 			errors <- err
 		}
 		close(stream)

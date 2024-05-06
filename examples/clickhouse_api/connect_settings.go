@@ -20,9 +20,10 @@ package clickhouse_api
 import (
 	"context"
 	"fmt"
-	"github.com/ClickHouse/clickhouse-go/v2"
 	"net"
 	"time"
+
+	"github.com/ClickHouse/clickhouse-go/v2"
 )
 
 func PingWithSettings() error {
@@ -44,7 +45,7 @@ func PingWithSettings() error {
 			return d.DialContext(ctx, "tcp", addr)
 		},
 		Debug: true,
-		Debugf: func(format string, v ...any) {
+		Debugf: func(ctx context.Context, format string, v ...any) {
 			fmt.Printf(format, v)
 		},
 		Settings: clickhouse.Settings{

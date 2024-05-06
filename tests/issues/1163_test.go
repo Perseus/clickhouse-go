@@ -4,9 +4,10 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
 	clickhouse_tests "github.com/ClickHouse/clickhouse-go/v2/tests"
@@ -28,7 +29,7 @@ func TestIssue1163(t *testing.T) {
 	options := &clickhouse.Options{
 		Addr:  []string{fmt.Sprintf("%s:%d", env.Host, port)},
 		Debug: true,
-		Debugf: func(format string, v ...any) {
+		Debugf: func(ctx context.Context, format string, v ...any) {
 			debugfCalled = true
 		},
 		Auth: clickhouse.Auth{

@@ -157,7 +157,7 @@ func (b *batch) appendRowsBlocks(r *rows) error {
 
 	for r.Next() {
 		if lastReadLock == nil { // make sure the first block is logged
-			b.conn.debugf("[batch.appendRowsBlocks] blockNum = %d", blockNum)
+			b.conn.debugf(context.Background(), "[batch.appendRowsBlocks] blockNum = %d", blockNum)
 		}
 
 		// rows.Next() will read the next block from the server only if the current block is empty
@@ -168,7 +168,7 @@ func (b *batch) appendRowsBlocks(r *rows) error {
 				return err
 			}
 			blockNum++
-			b.conn.debugf("[batch.appendRowsBlocks] blockNum = %d", blockNum)
+			b.conn.debugf(context.Background(), "[batch.appendRowsBlocks] blockNum = %d", blockNum)
 		}
 
 		b.block = r.block
