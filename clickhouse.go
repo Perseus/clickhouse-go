@@ -259,11 +259,15 @@ func DefaultDialStrategy(ctx context.Context, connID int, opt *Options, dial Dia
 func (ch *clickhouse) acquire(ctx context.Context) (conn *connect, err error) {
 	timer := time.NewTimer(ch.opt.DialTimeout)
 	defer timer.Stop()
+
+	ch.opt.Debugf(ctx, "[acquire] waiting for connection (open: %d, idle: %d)", len(ch.open), len(ch.idle))
+	startTime := time.Now()
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	default:
 	}
+	ch.opt.Debugf(ctx, "[acquire] step 1 took %dms", time.Since(startTime).Milliseconds())
 	select {
 	case <-timer.C:
 		return nil, ErrAcquireConnTimeout
@@ -271,6 +275,9 @@ func (ch *clickhouse) acquire(ctx context.Context) (conn *connect, err error) {
 		return nil, ctx.Err()
 	case ch.open <- struct{}{}:
 	}
+
+	ch.opt.Debugf(ctx, "[acquire] step 2 took %dms", time.Since(startTime).Milliseconds())
+
 	select {
 	case <-timer.C:
 		select {
@@ -293,6 +300,9 @@ func (ch *clickhouse) acquire(ctx context.Context) (conn *connect, err error) {
 		return conn, nil
 	default:
 	}
+
+	ch.opt.Debugf(ctx, "[acquire] step 3 took %dms", time.Since(startTime).Milliseconds())
+
 	if conn, err = ch.dial(ctx); err != nil {
 		select {
 		case <-ch.open:
@@ -300,6 +310,9 @@ func (ch *clickhouse) acquire(ctx context.Context) (conn *connect, err error) {
 		}
 		return nil, err
 	}
+
+	ch.opt.Debugf(ctx, "[acquire] step 4 took %dms", time.Since(startTime).Milliseconds())
+
 	return conn, nil
 }
 
