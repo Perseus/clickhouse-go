@@ -122,11 +122,13 @@ func (ch *clickhouse) ServerVersion() (*driver.ServerVersion, error) {
 }
 
 func (ch *clickhouse) Query(ctx context.Context, query string, args ...any) (rows driver.Rows, err error) {
+	startTime := time.Now()
 	conn, err := ch.acquire(ctx)
 	if err != nil {
 		return nil, err
 	}
-	conn.debugf(ctx, "[acquired] connection [%d]", conn.id)
+	timeTaken := time.Since(startTime).Milliseconds()
+	conn.debugf(ctx, "[acquired] connection [%d] took %dms", conn.id, timeTaken)
 	return conn.query(ctx, ch.release, query, args...)
 }
 
