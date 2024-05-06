@@ -297,11 +297,13 @@ func (ch *clickhouse) acquire(ctx context.Context) (conn *connect, err error) {
 			}
 		}
 		conn.released = false
+		ch.opt.Debugf(ctx, "[acquire] step 3 (conn_found) took %dms", time.Since(startTime).Milliseconds())
+
 		return conn, nil
 	default:
 	}
 
-	ch.opt.Debugf(ctx, "[acquire] step 3 took %dms", time.Since(startTime).Milliseconds())
+	ch.opt.Debugf(ctx, "[acquire] step 3 (conn_not_found) took %dms", time.Since(startTime).Milliseconds())
 
 	if conn, err = ch.dial(ctx); err != nil {
 		select {
