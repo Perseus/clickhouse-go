@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/ClickHouse/clickhouse-go/v2/lib/proto"
+	"github.com/Perseus/clickhouse-go/v2/lib/proto"
 )
 
 type onProcess struct {

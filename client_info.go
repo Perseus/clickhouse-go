@@ -19,7 +19,7 @@ package clickhouse
 
 import (
 	"fmt"
-	"github.com/ClickHouse/clickhouse-go/v2/lib/proto"
+	"github.com/Perseus/clickhouse-go/v2/lib/proto"
 	"runtime"
 	"sort"
 	"strings"

@@ -1,7 +1,7 @@
 package clickhouse
 
 import (
-	"github.com/ClickHouse/clickhouse-go/v2/lib/proto"
+	"github.com/Perseus/clickhouse-go/v2/lib/proto"
 	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"

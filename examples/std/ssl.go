@@ -25,7 +25,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/Perseus/clickhouse-go/v2"
 )
 
 func ConnectSSL() error {

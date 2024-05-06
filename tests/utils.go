@@ -39,9 +39,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	"github.com/ClickHouse/clickhouse-go/v2/lib/proto"
+	"github.com/Perseus/clickhouse-go/v2"
+	"github.com/Perseus/clickhouse-go/v2/lib/driver"
+	"github.com/Perseus/clickhouse-go/v2/lib/proto"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	"github.com/docker/go-units"

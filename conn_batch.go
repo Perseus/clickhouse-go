@@ -27,9 +27,9 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ClickHouse/clickhouse-go/v2/lib/column"
-	"github.com/ClickHouse/clickhouse-go/v2/lib/driver"
-	"github.com/ClickHouse/clickhouse-go/v2/lib/proto"
+	"github.com/Perseus/clickhouse-go/v2/lib/column"
+	"github.com/Perseus/clickhouse-go/v2/lib/driver"
+	"github.com/Perseus/clickhouse-go/v2/lib/proto"
 )
 
 var splitInsertRe = regexp.MustCompile(`(?i)\sVALUES\s*\(`)
